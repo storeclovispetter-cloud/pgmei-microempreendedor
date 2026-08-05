@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGMEI - Programa Gerador de DAS do Microempreendedor Individual</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <!-- SCRIPT PARA CARREGAR CNPJ DA SESSÃO -->
+    <script>
+        // Carregar dados do CNPJ da sessão
+        fetch('/api/get-cnpj-session')
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Dados do CNPJ carregados:', data);
+                
+                // Atualizar CNPJ e Nome na página
+                document.querySelectorAll('.list-inline li').forEach(li => {
+                    if (li.innerHTML.includes('<strong>CNPJ:</strong>')) {
+                        li.innerHTML = '<strong>CNPJ:</strong> ' + data.cnpj_formatado;
+                    }
+                    if (li.innerHTML.includes('<strong>Nome:</strong>')) {
+                        li.innerHTML = '<strong>Nome:</strong> ' + data.nome_empresa;
+                    }
+                });
+                
+                // Atualizar links de emissão com o CNPJ correto
+                const cnpjBase64 = btoa(data.cnpj);
+                document.querySelectorAll('a[href*="/emissao"]').forEach(a => {
+                    a.href = '/emissao?cnpj=' + cnpjBase64;
+                });
+            })
+            .catch(error => {
+                console.error('❌ Erro ao carregar CNPJ:', error);
+                // Dados padrão em caso de erro
+                document.querySelectorAll('.list-inline li').forEach(li => {
+                    if (li.innerHTML.includes('<strong>CNPJ:</strong>')) {
+                        li.innerHTML = '<strong>CNPJ:</strong> 27.354.159/0001-60';
+                    }
+                    if (li.innerHTML.includes('<strong>Nome:</strong>')) {
+                        li.innerHTML = '<strong>Nome:</strong> 27.354.159 ELIANA GOMES DA SILVA';
+                    }
+                });
+            });
+    </script>
+    
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3c763d;
+            padding-bottom: 15px;
+        }
+        .header h3 {
+            color: #3c763d;
+            font-weight: bold;
+        }
+        .header h4 {
+            color: #5cb85c;
+        }
+        .panel-heading {
+            background-color: #dff0d8 !important;
+            border-color: #d6e9c6 !important;
+            color: #3c763d !important;
+            font-weight: bold;
+        }
+        .table > thead > tr > th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        .navbar-default {
+            background-color: #f8f8f8;
+            border-color: #e7e7e7;
+            margin-bottom: 20px;
+        }
+        .navbar-default .navbar-nav > li > a {
+            color: #3c763d;
+            font-weight: 500;
+        }
+        .navbar-default .navbar-nav > li > a:hover {
+            color: #2b542c;
+            background-color: #e7e7e7;
+        }
+        .list-group-item {
+            background-color: #f9f9f9;
+        }
+        .list-inline {
+            margin-bottom: 0;
+        }
+        .list-inline li {
+            padding-right: 20px;
+        }
+        .list-inline li strong {
+            color: #3c763d;
+        }
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #777;
+        }
+        .btn-success {
+            background-color: #5cb85c;
+            border-color: #4cae4c;
+        }
+        .btn-success:hover {
+            background-color: #449d44;
+            border-color: #398439;
+        }
+        .well {
+            background-color: #ffffff;
+            border: 1px solid #d6e9c6;
+        }
+        .text-success {
+            color: #3c763d;
+        }
+        .label-success {
+            background-color: #5cb85c;
+            padding: 8px 15px;
+            font-size: 18px;
+        }
+        .label-success img {
+            height: 30px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="row header">
+            <div class="col-md-12">
+                <h3>
+                    <span class="label label-success">
+                        <img src="/index_files/logo-simples.png" alt="Logo" style="height:30px;">
+                        PGMEI
+                    </span>
+                </h3>
+                <h4 class="text-success">Programa Gerador de DAS do Microempreendedor Individual</h4>
+            </div>
+        </header>
+
+        <section class="row">
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbarCollapse">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                    </div>
+
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="nav navbar-nav">
+                            <li class="active">
+                                <a href="/inicio">
+                                    <span class="glyphicon glyphicon-home"></span> Inicio
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/emissao">
+                                    <span class="glyphicon glyphicon-check"></span> Emitir Guia de Pagamento (DAS)
+                                </a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">
+                                    <span class="glyphicon glyphicon-lock"></span> Consulta Extrato/Pendências
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="/emissao">
+                                            <span class="glyphicon glyphicon-list-alt"></span> Consulta Extrato
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/emissao">
+                                            <span class="glyphicon glyphicon-saved"></span> Consulta Pendência no Simei
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/emissao">
+                                            <span class="glyphicon glyphicon-barcode"></span> Consulta DAS Emitidos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                <a href="#">
+                                    <span class="glyphicon glyphicon-info-sign"></span> Ajuda
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/">
+                                    <span class="glyphicon glyphicon-log-out"></span> Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </section>
+
+        <section class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Dados do Contribuinte</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <ul class="list-inline">
+                                    <li><strong>CNPJ:</strong> 27.354.159/0001-60</li>
+                                    <li><strong>Nome:</strong> 27.354.159 ELIANA GOMES DA SILVA</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="row">
+            <div class="col-md-12">
+                <div class="well">
+                    <h4>Informações importantes:</h4>
+                    <p>A contagem da carência (quantidade de contribuições necessárias para ter direito aos benefícios previdenciários) inicia-se a partir do <strong>PRIMEIRO PAGAMENTO EM DIA</strong>.</p>
+                    <p>O MEI, mesmo sem faturamento, deve pagar mensalmente o DAS (Guia de pagamento).</p>
+                    <p>Caso o DAS não tenha sido pago até a data de vencimento, o MEI deve emitir e pagar o novo DAS (Guia de Pagamento) com acréscimos legais (multa e juros).</p>
+                    <p>Caso tenha dúvidas sobre o PGMEI, clique em "Ajuda".</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="row">
+            <div class="col-md-12">
+                <p class="text-success pull-left"><strong>Versão: 3.16.1</strong></p>
+                <p class="pull-right">
+                    <img src="/index_files/marca_Simples_entes.png" alt="Marca Simples" height="40">
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>

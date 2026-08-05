@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
+  <meta http-equiv="content-language" content="pt-br">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="/index_files/favicon.ico">
+  <title>PGMEI - Programa Gerador de DAS do Microempreendedor Individual</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/index_files/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda-themeless.min.css">
+  
+  <script>
+    // Variáveis globais para dados do cliente
+    let dadosCliente = {
+      cnpj: "",
+      cnpj_formatado: "",
+      empresa: ""
+    };
+
+    let apiCompleta = null;
+    let anosDisponiveis = [];
+    let todasGuias = [];
+    const cacheAnos = {};
+
+    // Carregar dados do CNPJ da sessão
+    fetch('/api/get-cnpj-session')
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Dados do CNPJ carregados na emissão:', data);
+            dadosCliente = {
+                cnpj: data.cnpj,
+                cnpj_formatado: data.cnpj_formatado,
+                empresa: data.nome_empresa
+            };
+            
+            document.querySelectorAll('.list-inline li').forEach(li => {
+                if (li.innerHTML.includes('<strong>CNPJ:</strong>')) {
+                    li.innerHTML = '<strong>CNPJ:</strong> ' + data.cnpj_formatado;
+                }
+                if (li.innerHTML.includes('<strong>Nome:</strong>')) {
+                    li.innerHTML = '<strong>Nome:</strong> ' + data.nome_empresa;
+                }
+            });
+            
+            if (typeof window !== 'undefined') {
+                window.razaoEmpresa = data.nome_empresa;
+            }
+            carregarAnos();
+        })
+        .catch(error => {
+            console.error('❌ Erro ao carregar CNPJ:', error);
+        });
+  </script>
+  
+  <style>
+    @font-face {
+      font-family: 'Glyphicons Halflings';
+      src: url('/index_files/glyphicons-halflings-regular.woff2') format('woff2'),
+           url('/index_files/glyphicons-halflings-regular.woff') format('woff'),
+           url('/index_files/glyphicons-halflings-regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    .inline-date { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+    #g-recaptcha-enterprise-emissao { margin: 10px 0; display: block; min-height: 60px; width: 0 !important; height: 0 !important; }
+    .inline-date .form-control.datepicker { width: 170px; display: inline-block; }
+    .popover { position: absolute !important; z-index: 9999 !important; max-width: 276px; pointer-events: none; }
+    .table-responsive { position: relative; overflow: visible !important; }
+    .popover.fade.in { margin: 0 !important; }
+    .disabled-checkbox { opacity: 0.5; cursor: not-allowed !important; pointer-events: none; }
+    .disabled-checkbox:disabled { background-color: #f5f5f5; border-color: #ddd; }
+    tr .disabled-checkbox { opacity: 0.5; }
+    tr td:has(.disabled-checkbox) { opacity: 0.7; }
+
+    /* =========================================================== */
+    /* CORREÇÕES VISUAIS DA TABELA (INSERIDAS NO ORIGINAL) */
+    /* =========================================================== */
+    #tabelaMeses {
+        border: 1px solid #d9d9d9 !important;
+    }
+    
+    /* Cabeçalho - cinza e azul petróleo */
+    #tabelaMeses thead tr th {
+        background-color: #e8e8e8 !important;
+        color: #0A4C62 !important;
+        border: 1px solid #d9d9d9 !important;
+        font-weight: bold !important;
+        padding: 10px 8px !important;
+        vertical-align: middle !important;
+        text-align: left !important;
+    }
+
+    /* Células normais */
+    #tabelaMeses tbody td {
+        border: 1px solid #d9d9d9 !important;
+        color: #333333 !important;
+        padding: 8px 10px !important;
+        vertical-align: middle !important;
+    }
+
+    /* Zebrado exato */
+    #tabelaMeses tbody tr:nth-child(even) { background-color: #f9f9f9 !important; }
+    #tabelaMeses tbody tr:nth-child(odd) { background-color: #ffffff !important; }
+    #tabelaMeses tbody tr:hover { background-color: #f1f1f1 !important; }
+
+    /* Alinhamentos */
+    #tabelaMeses td.principal, #tabelaMeses td.multa, #tabelaMeses td.juros, #tabelaMeses td.total { text-align: right !important; }
+    #tabelaMeses td.vencimento, #tabelaMeses td.acolhimento { text-align: center !important; }
+    #tabelaMeses td.periodo, #tabelaMeses td.situacao { text-align: left !important; }
+
+    /* Cores da coluna SITUAÇÃO */
+    #tabelaMeses td.devedor { color: #CC0000 !important; font-weight: bold !important; }
+    #tabelaMeses td.a-vencer { color: #0A4C62 !important; font-weight: normal !important; }
+    /* =========================================================== */
+
+    @media (max-width: 768px) {
+      .container { padding-left: 10px; padding-right: 10px; }
+      .navbar-header { width: 100%; }
+      .navbar-brand { font-size: 16px; padding: 10px 15px; }
+      .panel-heading h3 { font-size: 18px; }
+      .panel-body { padding: 10px; }
+      .table>tbody>tr>td { padding: 8px 5px; font-size: 13px; }
+      .table>tbody>tr>td:first-child { font-weight: bold; min-width: 80px; }
+      .inline-date { flex-direction: column; gap: 10px; align-items: stretch; }
+      .inline-date label { text-align: center; font-size: 14px; }
+      .inline-date .form-control.datepicker { width: 100%; }
+      .table-responsive { overflow-x: auto !important; overflow-y: visible; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 4px; }
+      #tabelaMeses { min-width: 800px; font-size: 12px; }
+      #tabelaMeses th, #tabelaMeses td { padding: 6px 4px; white-space: nowrap; }
+      #tabelaMeses th { font-size: 11px; }
+      #tabelaMeses input[type="checkbox"] { transform: scale(1.2); margin: 0 auto; display: block; }
+      #tabelaMeses input[type="text"] { width: 100%; min-width: 80px; font-size: 12px; padding: 4px; }
+      .btn-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+      .btn-group .btn { width: 100%; margin: 0 !important; font-size: 14px; padding: 10px; }
+      .alert { font-size: 13px; padding: 10px; margin-bottom: 10px; }
+      .popover { max-width: 200px; font-size: 12px; }
+      footer { margin-top: 0px; padding: 10px 15px 0px 15px !important; border-top: 1px solid #eaeaea; background-color: #e1dddd; position: absolute; bottom: 0; }
+      .swal2-popup { width: 90% !important; font-size: 14px; }
+      .swal2-title { font-size: 20px !important; }
+      .swal2-html-container { font-size: 14px !important; }
+      #tabelaMeses thead th:first-child { font-size: 10px; }
+      #tabelaMeses td.periodo { min-width: 100px; }
+      #tabelaMeses tfoot { font-size: 13px; font-weight: bold; }
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .qr-spinner-modern { animation: spin 1s linear infinite; }
+
+    @media (max-width: 480px) {
+      .navbar-brand { font-size: 14px; }
+      .panel-heading h3 { font-size: 16px; }
+      #tabelaMeses { min-width: 700px; font-size: 11px; }
+      #tabelaMeses th, #tabelaMeses td { padding: 5px 3px; }
+      .btn-group .btn { font-size: 13px; padding: 8px; }
+      .popover { display: none; }
+    }
+
+    @media (max-width: 768px) and (orientation: landscape) {
+      .panel-body { max-height: 70vh; overflow-y: auto; }
+      #tabelaMeses { font-size: 11px; }
+    }
+
+    @media (max-width: 768px) {
+      .panel-footer .col-md-12 { padding: 10px; }
+      .panel-footer .inline-date { margin-bottom: 15px; }
+      .panel-footer hr { margin: 15px 0; }
+      .panel-footer .text-center { display: flex; flex-direction: column; gap: 12px; }
+      .panel-footer .text-center .btn { width: 100%; margin: 0 !important; padding: 12px 20px; font-size: 15px; font-weight: 500; }
+      .panel-footer hr { display: none; }
+    }
+  </style>
+  <style>
+    :root {
+      --swal2-outline: 0 0 0 3px rgba(100, 150, 200, 0.5);
+      --swal2-container-padding: 0.625em;
+      --swal2-backdrop: rgba(0, 0, 0, 0.4);
+      --swal2-backdrop-transition: background-color 0.15s;
+      --swal2-width: 32em;
+      --swal2-padding: 0 0 1.25em;
+      --swal2-border: none;
+      --swal2-border-radius: 0.3125rem;
+      --swal2-background: white;
+      --swal2-color: #545454;
+      --swal2-show-animation: swal2-show 0.3s;
+      --swal2-hide-animation: swal2-hide 0.15s forwards;
+      --swal2-icon-zoom: 1;
+      --swal2-icon-animations: true;
+      --swal2-title-padding: 0.8em 1em 0;
+      --swal2-html-container-padding: 1em 1.6em 0.3em;
+      --swal2-input-border: 1px solid #d9d9d9;
+      --swal2-input-border-radius: 0.1875em;
+      --swal2-input-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;
+      --swal2-input-background: transparent;
+      --swal2-input-transition: border-color 0.2s, box-shadow 0.2s;
+      --swal2-input-hover-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;
+      --swal2-input-focus-border: 1px solid #b4dbed;
+      --swal2-input-focus-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(100, 150, 200, 0.5);
+      --swal2-progress-step-background: #add8e6;
+      --swal2-validation-message-background: #f0f0f0;
+      --swal2-validation-message-color: #666;
+      --swal2-footer-border-color: #eee;
+      --swal2-footer-background: transparent;
+      --swal2-footer-color: inherit;
+      --swal2-timer-progress-bar-background: rgba(0, 0, 0, 0.3);
+      --swal2-close-button-position: initial;
+      --swal2-close-button-inset: auto;
+      --swal2-close-button-font-size: 2.5em;
+      --swal2-close-button-color: #ccc;
+      --swal2-close-button-transition: color 0.2s, box-shadow 0.2s;
+      --swal2-close-button-outline: initial;
+      --swal2-close-button-box-shadow: inset 0 0 0 3px transparent;
+      --swal2-close-button-focus-box-shadow: inset var(--swal2-outline);
+      --swal2-close-button-hover-transform: none;
+      --swal2-actions-justify-content: center;
+      --swal2-actions-width: auto;
+      --swal2-actions-margin: 1.25em auto 0;
+      --swal2-actions-padding: 0;
+      --swal2-actions-border-radius: 0;
+      --swal2-actions-background: transparent;
+      --swal2-action-button-transition: background-color 0.2s, box-shadow 0.2s;
+      --swal2-action-button-hover: black 10%;
+      --swal2-action-button-active: black 10%;
+      --swal2-confirm-button-box-shadow: none;
+      --swal2-confirm-button-border-radius: 0.25em;
+      --swal2-confirm-button-background-color: #7066e0;
+      --swal2-confirm-button-color: #fff;
+      --swal2-deny-button-box-shadow: none;
+      --swal2-deny-button-border-radius: 0.25em;
+      --swal2-deny-button-background-color: #dc3741;
+      --swal2-deny-button-color: #fff;
+      --swal2-cancel-button-box-shadow: none;
+      --swal2-cancel-button-border-radius: 0.25em;
+      --swal2-cancel-button-background-color: #6e7881;
+      --swal2-cancel-button-color: #fff;
+      --swal2-toast-show-animation: swal2-toast-show 0.5s;
+      --swal2-toast-hide-animation: swal2-toast-hide 0.1s forwards;
+      --swal2-toast-border: none;
+      --swal2-toast-box-shadow: 0 0 1px hsl(0deg 0% 0% / 0.075), 0 1px 2px hsl(0deg 0% 0% / 0.075), 1px 2px 4px hsl(0deg 0% 0% / 0.075), 1px 3px 8px hsl(0deg 0% 0% / 0.075), 2px 4px 16px hsl(0deg 0% 0% / 0.075);
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <header class="row">
+      <h3><span class="label label-success"><img alt="Brand" src="/index_files/logo-simples.png"> PGMEI</span></h3>
+      <h4 class="text-success">Programa Gerador de DAS do Microempreendedor Individual</h4>
+    </header>
+
+    <section class="row">
+      <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid bg-success">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbarCollapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div class="navbar-collapse collapse" id="navbarCollapse">
+            <ul class="nav navbar-nav">
+              <li><a href="/inicio"><span class="glyphicon glyphicon-home"></span> Inicio</a></li>
+              <li class="active"><a href="/emissao"><span class="glyphicon glyphicon-check"></span> Emitir Guia de Pagamento (DAS)</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-lock"></span> Consulta Extrato/Pendências <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="/emissao"><span class="glyphicon glyphicon-list-alt"></span> Consulta Extrato</a></li>
+                  <li><a href="/emissao"><span class="glyphicon glyphicon-saved"></span> Consulta Pendência no Simei</a></li>
+                  <li><a href="/emissao"><span class="glyphicon glyphicon-barcode"></span> Consulta DAS Emitidos</a></li>
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="#"><span class="glyphicon glyphicon-info-sign"></span> Ajuda</a></li>
+              <li><a href="/"><span class="glyphicon glyphicon-log-out"></span> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </section>
+
+    <section class="row">
+      <ul class="list-group">
+        <li class="list-group-item">
+          <ul class="list-inline">
+            <li><strong>CNPJ:</strong> Carregando...</li>
+            <li><strong>Nome:</strong> Carregando...</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <div id="g-recaptcha-enterprise-emissao" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+    <section class="row">
+      <div class="well col-md-12" role="main" id="emissaoMain">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12 text-center">
+              <div class="AnoCalendario">
+                <form class="form-inline" role="form" id="formAno">
+                  <div class="form-group">
+                    <label for="anoCalendarioSelect">Informe o Ano-Calendário:</label>
+                    <select name="ano" id="anoCalendarioSelect" class="form-control" style="width: 120px;">
+                      <option value="">Carregando...</option>
+                    </select>
+                  </div>
+                  <button type="submit" id="btnSelecionarAno" class="btn btn-success ladda-button" data-style="slide-left">
+                    <span class="ladda-label">Ok</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div id="divTabelaMeses" style="margin-top: 20px; display: none;">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="panel panel-default" id="painelTabela">
+                  <div class="panel-heading">
+                    <h4 class="panel-title">Selecione o(s) período(s) de apuração:</h4>
+                  </div>
+                  <div class="panel-body">
+                    <div id="resumoDAS" class="table-responsive">
+                      <table class="table table-hover table-condensed emissao is-detailed" id="tabelaMeses">
+                        <thead>
+                          <tr>
+                            <th class="check" rowspan="2">
+                              <input type="checkbox" id="selecionarTodos" title="Selecionar Todos">
+                            </th>
+                            <th class="periodo" rowspan="2">Período de Apuração</th>
+                            <th class="apurado" rowspan="2">Apurado</th>
+                            <th class="beneficio" rowspan="2" data-toggle="popover" data-content="Indique se você recebeu benefício de salário-maternidade, auxílio-doença ou auxílio-reclusão.">Benefício INSS</th>
+                            <th class="situacao" rowspan="2">Situação</th>
+                            <th colspan="6">Resumo do DAS a ser gerado</th>
+                          </tr>
+                          <tr>
+                            <th class="principal">Principal</th>
+                            <th class="multa">Multa</th>
+                            <th class="juros">Juros</th>
+                            <th class="total">Total</th>
+                            <th class="vencimento">Vencimento</th>
+                            <th class="acolhimento">Acolhimento</th>
+                          </tr>
+                        </thead>
+                        <tbody id="corpoTabela">
+                          <tr><td colspan="11" class="text-center">Selecione um ano para carregar os dados</td></tr>
+                        </tbody>
+                        <tfoot style="display: none;">
+                          <tr>
+                            <td colspan="5">DAS consolidado</td>
+                            <td class="principal text-center">R$ 0,00</td>
+                            <td class="multa text-center">R$ 0,00</td>
+                            <td class="juros text-center">R$ 0,00</td>
+                            <td class="total text-center">R$ 0,00</td>
+                            <td class="vencimento text-center">-</td>
+                            <td class="acolhimento text-center">-</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="panel-footer">
+                    <div class="row">
+                      <div class="col-md-12 text-center">
+                        <div class="inline-date">
+                          <label>Informe a data para pagamento do(s) DAS:</label>
+                          <input type="text" class="form-control datepicker" id="dataPagamentoInformada" value="04/03/2026" readonly>
+                        </div>
+                        <hr>
+                        <button type="button" id="btnAtualizarValores" class="btn btn-success ladda-button" data-style="slide-left" disabled>
+                          <span class="ladda-label">Atualizar Valores</span>
+                        </button>
+                        <button type="button" id="btnEmitirDas" class="btn btn-success ladda-button disabled" data-style="slide-left" disabled>
+                          <span class="ladda-label">Apurar/Gerar DAS</span>
+                        </button>
+                        <button type="button" id="btnPagarOnline" class="btn btn-success ladda-button disabled" data-style="slide-left" disabled>
+                          <span class="ladda-label">Pagar Online (PIX)</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer id="footerEmissao" class="row clearfix" style="position: absolute; width: 857.2px; left: 50%; transform: translateX(-50%); margin-left: 0px;">
+      <div class="pull-left">
+        <p class="text-success"><strong>Versão: 3.16.1</strong></p>
+      </div>
+      <div class="pull-right"><img src="/index_files/marca_Simples_entes.png" alt=""></div>
+    </footer>
+  </div>
+
+  <div id="modalPagarOnline" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width:95%; max-width:1200px;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Fechar"><span aria-hidden="true">×</span></button>
+          <img src="/index_files/logo-simples.png" alt="Logo" style="height:28px; vertical-align:middle; margin-right:8px;">
+          <span style="font-weight:bold; color:#0A4C62;">Pagar Online — Documento de Arrecadação (MEI)</span>
+        </div>
+        <div class="modal-body">
+          <style>
+            @media (min-width: 768px) {
+              #poLayout { flex-direction: row !important; }
+            }
+            @media (max-width: 400px) {
+              #modalPagarOnline .modal-dialog {
+                width: 100% !important;
+                margin: 10px;
+                max-width: calc(100vw - 20px);
+              }
+              #poLayout { gap: 10px; }
+            }
+          </style>
+          <div id="poPeriodo" style="margin-bottom:10px; font-size:14px; display: none !important;">Período de Apuração: <span id="poPeriodoValor">—</span></div>
+          <div id="poLayout" style="display:flex; align-items:flex-start; gap:16px; flex-direction: column;">
+            <div id="poQRCol" style="flex:1; min-width:260px; margin-left: auto; margin-right: auto;">
+              <div id="poQrBox" style="border:1px solid #ddd; padding:10px; border-radius:6px; width:220px; height:220px; display:flex; align-items:center; justify-content:center; margin:auto; background:#f9f9f9; position:relative;">
+                <img id="poQrImg" src="" alt="QR Code PIX" style="max-width:100%; max-height:100%; display: none; position:relative; z-index:1;">
+                <img id="poQrLogo" src="/index_files/logo-simples.png" alt="Logo" style="position:absolute; width:40px; height:40px; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2; background:white; padding:2px; border-radius:3px; display:none; box-shadow:0 1px 4px rgba(0,0,0,0.15);">
+                <div id="poQrLoading" style="text-align:center;">
+                  <div class="qr-spinner-modern" style="width:50px; height:50px; margin:0 auto 12px; border:4px solid #f3f3f3; border-top:4px solid #00C851; border-radius:50%; animation:spin 1s linear infinite;"></div>
+                  <div style="font-size:13px; color:#666; font-weight:500;">Gerando QR Code PIX...</div>
+                </div>
+              </div>
+              <div style="margin-top:12px;">
+                <label for="poPixCode" style="color:#0A4C62;">Código PIX (copia e cola)</label>
+                <div id="poPixRow" style="display:flex; gap:8px; align-items:center;">
+                  <input id="poPixCode" type="text" class="form-control" value="" readonly>
+                  <button id="poBtnCopy" class="btn btn-default">Copiar</button>
+                </div>
+                <div id="poCopyFeedback" style="margin-top:6px; font-size:12px; color:#1caa12; display:none;">Código PIX copiado!</div>
+                <div id="poWaitCard" style="border:1px solid #eee; border-radius:6px; padding:10px; margin-top:12px; display:flex; align-items:center; gap:10px;">
+                  <div class="qr-spinner-modern" style="width:20px; height:20px; border:3px solid #f3f3f3; border-top:3px solid #0A4C62; border-radius:50%; flex-shrink:0;"></div>
+                  <div>
+                    <div style="font-weight:bold; color:#0A4C62;">Aguardando pagamento</div>
+                    <div style="font-size:12px; color:#666;">Assim que o banco confirmar, atualizaremos o status.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="poInfoCol" style="flex:1;display: flex;flex-direction: column;max-width: 100%;">
+              <div style="border:1px solid #eee; border-radius:6px; padding:10px;">
+                <div style="font-weight:bold; color:#0A4C62; margin-bottom:8px;">Resumo do Pagamento</div>
+                <div style="font-size:13px; color:#333; line-height:1.6;">
+                  <div><strong>CNPJ:</strong> <span id="poResumoCnpj">—</span></div>
+                  <div><strong>Nome:</strong> <span id="poResumoRazao">—</span></div>
+                  <div hidden><strong>Período:</strong> <span id="poResumoPeriodo">—</span></div>
+                  <div><strong>Valor:</strong> <span id="poResumoValor">R$ 0,00</span></div>
+                </div>
+                <div style="margin-top:8px; font-size:12px; color:#666;">
+                  Use o QR Code para pagar com seu banco ou carteira digital. O código "copia e cola" funciona em qualquer app compatível com PIX.
+                </div>
+              </div>
+              <div id="poResumoTabelaBox" style="border:1px solid #eee; border-radius:6px; padding:10px; margin-top:12px;">
+                <div style="font-weight:bold; color:#0A4C62; margin-bottom:8px;">Faturas Selecionadas</div>
+                <div style="overflow-x:auto;">
+                  <table id="poResumoTabela" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                      <tr>
+                        <th style="border-bottom:1px solid #eee; padding:12px; text-align:left; color:#0A4C62;">Período</th>
+                        <th style="border-bottom:1px solid #eee; padding:12px; text-align:right; color:#0A4C62;">Principal</th>
+                        <th style="border-bottom:1px solid #eee; padding:12px; text-align:right; color:#0A4C62;">Multa</th>
+                        <th style="border-bottom:1px solid #eee; padding:12px; text-align:right; color:#0A4C62;">Juros</th>
+                        <th style="border-bottom:1px solid #eee; padding:12px; text-align:right; color:#0A4C62;">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Ladda/1.0.6/ladda.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+  <script>
+    // ============================================
+    // FUNÇÕES PRINCIPAIS (CORRIGIDAS)
+    // ============================================
+
+    async function carregarAnos() {
+      console.log('🚀 Carregando anos para CNPJ:', dadosCliente.cnpj);
+      
+      if (!dadosCliente.cnpj) {
+        console.error('❌ CNPJ não disponível');
+        return;
+      }
+
+      const selectAno = document.getElementById('anoCalendarioSelect');
+      selectAno.innerHTML = '<option value="">Carregando...</option>';
+      selectAno.disabled = true;
+      
+      const corpo = document.getElementById('corpoTabela');
+      corpo.innerHTML = `
+        <tr>
+          <td colspan="11" class="text-center">
+            <i class="fa fa-spinner fa-spin" style="font-size:24px;"></i>
+            <br><br>
+            <strong>Buscando débitos na Receita Federal...</strong>
+            <br>
+            <small style="color:#666;">Isso pode levar alguns segundos.</small>
+          </td>
+        </tr>
+      `;
+      $('#divTabelaMeses').show();
+      
+      try {
+        const formData = new FormData();
+        formData.append('cnpj', dadosCliente.cnpj);
+
+        const response = await fetch('/salvar_cnpj_emissao.php', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
+
+        const result = await response.json();
+        console.log('📥 Resposta da API:', result);
+        
+        if (result.success && result.data) {
+          apiCompleta = result.data.api_completa || {};
+          todasGuias = apiCompleta.guias || [];
+          
+          console.log('✅ Guias carregadas:', todasGuias.length);
+          
+          if (result.data.anos && result.data.anos.length > 0) {
+            anosDisponiveis = result.data.anos.sort((a, b) => a - b);
+          } else {
+            const anosSet = new Set();
+            todasGuias.forEach(guia => {
+              if (guia && guia.mesAno && guia.mesAno.includes('/')) {
+                const ano = parseInt(guia.mesAno.split('/')[1]);
+                if (ano && ano >= 2020 && ano <= 2100) anosSet.add(ano);
+              }
+            });
+            anosDisponiveis = Array.from(anosSet).sort((a, b) => a - b);
+          }
+          
+          console.log('📅 Anos disponíveis:', anosDisponiveis);
+
+          selectAno.innerHTML = '<option value="">Selecionar</option>';
+          anosDisponiveis.forEach(ano => {
+            const option = document.createElement('option');
+            option.value = ano;
+            option.textContent = ano;
+            selectAno.appendChild(option);
+          });
+          
+          selectAno.disabled = false;
+          
+          const anoAtual = new Date().getFullYear();
+          if (anosDisponiveis.includes(anoAtual)) {
+            selectAno.value = anoAtual;
+            carregarTabela(anoAtual);
+          } else if (anosDisponiveis.length > 0) {
+            selectAno.value = anosDisponiveis[anosDisponiveis.length - 1];
+            carregarTabela(anosDisponiveis[anosDisponiveis.length - 1]);
+          } else {
+            corpo.innerHTML = '<tr><td colspan="11" class="text-center">Nenhum débito encontrado para este CNPJ.</td></tr>';
+          }
+        } else {
+          throw new Error('Resposta inválida da API');
+        }
+      } catch (error) {
+        console.error('❌ Erro:', error);
+        selectAno.innerHTML = '<option value="">Erro ao carregar</option>';
+        if (typeof toastr !== 'undefined') {
+          toastr.error('Erro ao carregar anos: ' + error.message);
+        }
+        corpo.innerHTML = `<tr><td colspan="11" class="text-center text-danger">Erro ao carregar dados: ${error.message}</td></tr>`;
+      }
+    }
+
+    function parseValorBr(str) {
+      if (!str || str === '-' || str === 'R$ 0,00') return 0;
+      const s = (str || '').toString().trim().replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function fmtBrl(num) {
+      return 'R$ ' + Number(num || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function atualizarResumoSelecionados() {
+      let somaPrincipal = 0, somaMulta = 0, somaJuros = 0, somaTotal = 0;
+      const vencs = new Set(), acols = new Set();
+      let selectedCount = 0;
+
+      $('#resumoDAS tbody tr').each(function() {
+        const $tr = $(this);
+        const $chk = $tr.find('input.paSelecionado');
+        
+        if ($chk.length) $tr.toggleClass('warning', $chk.is(':checked'));
+        
+        if ($chk.length && $chk.is(':checked')) {
+          selectedCount++;
+          somaPrincipal += parseValorBr($tr.find('td.principal').text());
+          somaMulta += parseValorBr($tr.find('td.multa').text());
+          somaJuros += parseValorBr($tr.find('td.juros').text());
+          somaTotal += parseValorBr($tr.find('td.total').text());
+          
+          const venc = $tr.find('td.vencimento').text().trim();
+          const acol = $tr.find('td.acolhimento').text().trim();
+          if (venc && venc !== '-') vencs.add(venc);
+          if (acol && acol !== '-') acols.add(acol);
+        }
+      });
+
+      const $tfoot = $('#resumoDAS tfoot');
+      $tfoot.find('td.principal').text(fmtBrl(somaPrincipal));
+      $tfoot.find('td.multa').text(fmtBrl(somaMulta));
+      $tfoot.find('td.juros').text(fmtBrl(somaJuros));
+      $tfoot.find('td.total').text(fmtBrl(somaTotal));
+      $tfoot.find('td.vencimento').text(vencs.size > 1 ? 'Diversos' : (vencs.size === 1 ? Array.from(vencs)[0] : '-'));
+      $tfoot.find('td.acolhimento').text(acols.size >= 1 ? Array.from(acols)[0] : '-');
+
+      $tfoot.css('display', selectedCount > 0 ? 'table-footer-group' : 'none');
+
+      const hasDebit = somaTotal > 0;
+      $('#btnPagarOnline, #btnEmitirDas, #btnAtualizarValores')
+        .prop('disabled', !hasDebit)
+        .toggleClass('disabled', !hasDebit);
+    }
+
+    $(document).on('change', '#resumoDAS input.paSelecionado', atualizarResumoSelecionados);
+    $(document).on('change', '#selecionarTodos', function() {
+      $('#resumoDAS input.paSelecionado').prop('checked', $(this).is(':checked'));
+      atualizarResumoSelecionados();
+    });
+
+    async function carregarTabela(ano) {
+      console.log('🔄 Carregando tabela para ano:', ano);
+      
+      const corpo = document.getElementById('corpoTabela');
+      if (!corpo) return;
+
+      $('#divTabelaMeses').show();
+      corpo.innerHTML = '<tr><td colspan="11" class="text-center"><i class="fa fa-spinner fa-spin"></i> Carregando dados...</td></tr>';
+
+      try {
+        const guiasDoAno = (todasGuias || []).filter(guia => {
+          if (guia && guia.mesAno && guia.mesAno.includes('/')) {
+            const anoGuia = parseInt(guia.mesAno.split('/')[1]);
+            return anoGuia === parseInt(ano);
+          }
+          return false;
+        });
+
+        console.log(`📊 Encontradas ${guiasDoAno.length} guias para o ano ${ano}`);
+
+        if (guiasDoAno.length === 0) {
+          corpo.innerHTML = '<tr><td colspan="11" class="text-center">Nenhuma guia encontrada para este ano.</td></tr>';
+          return;
+        }
+
+        const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        guiasDoAno.sort((a, b) => {
+          const mesA = meses.indexOf(a.mesAno.split('/')[0]);
+          const mesB = meses.indexOf(b.mesAno.split('/')[0]);
+          return mesA - mesB;
+        });
+
+        let html = '';
+        guiasDoAno.forEach(guia => {
+          const [mesNome, anoRef] = guia.mesAno.split('/');
+          const mesIdx = meses.indexOf(mesNome);
+          const mesNumero = mesIdx >= 0 ? String(mesIdx + 1).padStart(2, '0') : '';
+          
+          const formatarValor = (valor) => {
+            if (!valor || valor === '-' || valor === '') return '-';
+            if (valor.includes('R$')) return valor;
+            return 'R$ ' + valor;
+          };
+
+          // ============================================
+          // LÓGICA EXATA DA SITUAÇÃO CORRIGIDA
+          // ============================================
+          let situacaoClass = 'a-vencer';
+          let situacaoTexto = 'A Vencer';
+
+          const vMulta = parseValorBr(guia.multa);
+          const vJuros = parseValorBr(guia.juros);
+          
+          // Se tiver multa OU juros, é DEVEDOR
+          if (vMulta > 0 || vJuros > 0) {
+            situacaoClass = 'devedor';
+            situacaoTexto = 'Devedor';
+          }
+          // ============================================
+
+          html += '<tr class="pa">' +
+            '<td class="selecionar text-center"><input type="checkbox" class="paSelecionado" value="' + anoRef + mesNumero + '"></td>' +
+            '<td class="periodo">' + guia.mesAno + '</td>' +
+            '<td class="text-center">' + (guia.apurado || 'Não') + '</td>' +
+            '<td class="text-center"><input type="checkbox" class="beneficioSelecionado"></td>' +
+            '<td class="situacao ' + situacaoClass + '">' + situacaoTexto + '</td>' +
+            '<td class="principal updatable text-center">' + formatarValor(guia.principal) + '</td>' +
+            '<td class="multa updatable text-center">' + formatarValor(guia.multa) + '</td>' +
+            '<td class="juros updatable text-center">' + formatarValor(guia.juros) + '</td>' +
+            '<td class="total updatable text-center">' + formatarValor(guia.total) + '</td>' +
+            '<td class="vencimento updatable text-center">' + (guia.vencimento || '-') + '</td>' +
+            '<td class="acolhimento updatable text-center">' + (guia.acolhimento || '-') + '</td>' +
+            '</tr>';
+        });
+
+        corpo.innerHTML = html;
+        atualizarResumoSelecionados();
+        
+      } catch (error) {
+        console.error('❌ Erro ao carregar tabela:', error);
+        corpo.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Erro ao carregar dados: ' + error.message + '</td></tr>';
+      }
+    }
+
+    $('#anoCalendarioSelect').on('change', function() {
+      const ano = $(this).val();
+      if (ano) carregarTabela(ano);
+      else $('#divTabelaMeses').hide();
+    });
+
+    $('#formAno').on('submit', function(e) {
+      e.preventDefault();
+      const ano = $('#anoCalendarioSelect').val();
+      if (ano) carregarTabela(ano);
+      return false;
+    });
+
+    $('#btnPagarOnline').on('click', function(e) {
+      e.preventDefault();
+      if ($(this).prop('disabled')) return;
+      
+      const faturas = [];
+      let totalGeral = 0;
+      $('#resumoDAS tbody tr').each(function() {
+        const $tr = $(this);
+        if ($tr.find('input.paSelecionado').is(':checked')) {
+          const total = parseValorBr($tr.find('td.total').text());
+          faturas.push({
+            periodo: $tr.find('td.periodo').text(),
+            principal: $tr.find('td.principal').text(),
+            multa: $tr.find('td.multa').text(),
+            juros: $tr.find('td.juros').text(),
+            total: total
+          });
+          totalGeral += total;
+        }
+      });
+
+      if (faturas.length === 0) {
+        if (typeof toastr !== 'undefined') {
+          toastr.warning('Selecione pelo menos um período');
+        } else {
+          alert('Selecione pelo menos um período');
+        }
+        return;
+      }
+
+      // --- Registra o valor gerado no painel ---
+      $.ajax({
+          url: '/api/superpay_pix.php',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ valor: totalGeral }),
+          error: function(err) { console.warn('Erro ao registrar valor gerado:', err); }
+      });
+
+      const tbody = $('#poResumoTabela tbody');
+      tbody.empty();
+      faturas.forEach(f => {
+        tbody.append('<tr>' +
+          '<td style="padding:12px;">' + f.periodo + '</td>' +
+          '<td style="padding:12px; text-align:right;">' + f.principal + '</td>' +
+          '<td style="padding:12px; text-align:right;">' + f.multa + '</td>' +
+          '<td style="padding:12px; text-align:right;">' + f.juros + '</td>' +
+          '<td style="padding:12px; text-align:right;">' + fmtBrl(f.total) + '</td>' +
+          '</tr>');
+      });
+
+      $('#poResumoCnpj').text(dadosCliente.cnpj_formatado || '-');
+      $('#poResumoRazao').text(dadosCliente.empresa || '-');
+      $('#poResumoValor').text(fmtBrl(totalGeral));
+
+      $('#modalPagarOnline').modal('show');
+      $('#poQrLoading').show();
+      $('#poQrImg').hide();
+      $('#poPixCode').val('');
+
+      // Buscar a chave PIX agora sem bloqueio de admin
+      $.get('/api/admin/config/pix', function(data) {
+        if (data.chave && data.chave.length > 5) {
+            const chavePix = data.chave;
+            const nome = data.nome || dadosCliente.empresa || 'EMPRESA';
+            const cidade = data.cidade || 'SAO PAULO';
+            
+            const valorFormatado = totalGeral.toFixed(2).replace('.', '');
+            const payload = `00020126580014br.gov.bcb.pix0136${chavePix}5204000053039865404${valorFormatado}5802BR5925${nome.substring(0, 25)}6009${cidade.substring(0, 15)}62070503***6304`;
+            
+            $('#poPixCode').val(payload);
+            $('#poQrImg').attr('src', `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`).show();
+            $('#poQrLoading').hide();
+        } else {
+            $('#poQrLoading').html('<span style="color:red;">Chave PIX não cadastrada no painel.</span>');
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Configure a chave PIX no painel administrativo.');
+            }
+        }
+      }).fail(function() {
+        $('#poQrLoading').html('<span style="color:red;">Erro ao buscar chave PIX.</span>');
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Erro de conexão com o painel de configuração PIX.');
+        }
+      });
+    });
+
+    $(document).on('click', '#poBtnCopy', function(e) {
+      e.preventDefault();
+      const text = $('#poPixCode').val();
+      if (!text) return;
+
+      // --- Registra a cópia do PIX no painel ---
+      const valorCopy = parseFloat($('#poResumoValor').text().replace('R$', '').replace(/\./g, '').replace(',', '.'));
+      $.ajax({
+          url: '/api/register-pix-copy',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ valor: valorCopy }),
+          error: function(err) { console.warn('Erro ao registrar cópia:', err); }
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        $('#poCopyFeedback').show().fadeOut(2000);
+        if (typeof toastr !== 'undefined') {
+          toastr.success('Código PIX copiado!');
+        }
+      }).catch(() => {
+        $('#poPixCode').select();
+        document.execCommand('copy');
+        $('#poCopyFeedback').show().fadeOut(2000);
+        if (typeof toastr !== 'undefined') {
+          toastr.success('Código PIX copiado!');
+        }
+      });
+    });
+
+    $('#modalPagarOnline').on('hidden.bs.modal', function() {
+      $('#poQrImg').hide().attr('src', '');
+      $('#poQrLoading').html(`
+          <div class="qr-spinner-modern" style="width:50px; height:50px; margin:0 auto 12px; border:4px solid #f3f3f3; border-top:4px solid #00C851; border-radius:50%; animation:spin 1s linear infinite;"></div>
+          <div style="font-size:13px; color:#666; font-weight:500;">Gerando QR Code PIX...</div>
+      `);
+      $('#poPixCode').val('');
+    });
+
+    $('#btnEmitirDas, #btnAtualizarValores').on('click', function(e) {
+      e.preventDefault();
+      $('#btnPagarOnline').trigger('click');
+    });
+
+    $(document).ready(function() {
+      $('[data-toggle="popover"]').popover({ 
+        html: true, 
+        trigger: 'hover', 
+        container: 'body',
+        placement: 'right'
+      });
+      
+      if (typeof toastr !== 'undefined') {
+        toastr.options = {
+          closeButton: true,
+          progressBar: true,
+          positionClass: 'toast-top-right',
+          timeOut: 3000
+        };
+      }
+      
+      atualizarResumoSelecionados();
+    });
+
+    function ajustarLarguraFooter() {
+      const isMobile = window.innerWidth <= 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      const footer = document.getElementById('footerEmissao');
+      if (!footer) return;
+
+      if (isMobile) {
+        footer.style.width = '';
+        footer.style.left = '';
+        footer.style.right = '';
+        footer.style.transform = '';
+        footer.style.marginLeft = '';
+        return;
+      }
+
+      const containerFluid = document.querySelector('.container-fluid');
+      const rows = containerFluid ? containerFluid.querySelectorAll('.row:not(footer)') : document.querySelectorAll('.row:not(footer)');
+      
+      const row = Array.from(rows).find(r => {
+        const header = r.querySelector('header, nav, h3, h4');
+        return !header && r.getBoundingClientRect().width > 0;
+      }) || rows[0];
+
+      if (row && footer) {
+        const largura = row.getBoundingClientRect().width;
+        footer.style.width = largura + 'px';
+        footer.style.left = '50%';
+        footer.style.transform = 'translateX(-50%)';
+        footer.style.marginLeft = '0';
+      }
+    }
+
+    window.addEventListener('load', ajustarLarguraFooter);
+    window.addEventListener('resize', ajustarLarguraFooter);
+  </script>
+
+  <style>
+    .pa.warning { background-color: #fcf8e3; }
+    .pago { background-color: #dff0d8; }
+    .devedor { background-color: #f2dede; }
+    .text-center .fa-spinner { margin-right: 8px; }
+    .toast-success { background-color: #5cb85c; }
+    .toast-error { background-color: #d9534f; }
+    .toast-info { background-color: #5bc0de; }
+    .toast-warning { background-color: #f0ad4e; }
+  </style>
+</body>
+</html>

